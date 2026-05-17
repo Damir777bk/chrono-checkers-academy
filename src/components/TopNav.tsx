@@ -34,7 +34,14 @@ export function TopNav({ onUpgrade }: Props) {
           {user && profile ? (
             <div className="flex items-center gap-3">
               <div className="text-right hidden sm:block">
-                <div className="text-xs font-medium leading-tight">{profile.username}</div>
+                <div className="text-xs font-medium leading-tight flex items-center justify-end gap-1.5">
+                  <span>{profile.username}</span>
+                  {profile.is_premium && (
+                    <span className="px-1.5 py-0.5 text-[8px] uppercase tracking-[0.2em] font-bold rounded-[2px] bg-gradient-gold text-[var(--charcoal)] shadow-luxe">
+                      Pro
+                    </span>
+                  )}
+                </div>
                 <div className="text-[9px] uppercase tracking-[0.25em] text-muted-foreground leading-tight">
                   {profile.city} · {profile.rating}
                 </div>
