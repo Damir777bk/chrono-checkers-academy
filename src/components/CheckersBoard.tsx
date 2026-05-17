@@ -458,6 +458,8 @@ export function CheckersBoard({
               const dark = (r + c) % 2 === 1;
               const sel = selected?.r === r && selected?.c === c;
               const target = isTarget(r, c);
+              const hintFrom = hint && hint.from.r === r && hint.from.c === c;
+              const hintTo = hint && hint.to.r === r && hint.to.c === c;
               return (
                 <button
                   key={`${r}-${c}`}
