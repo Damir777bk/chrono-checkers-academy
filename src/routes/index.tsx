@@ -9,7 +9,7 @@ import { OnlineCheckersBoard } from "@/components/OnlineCheckersBoard";
 import { InviteModal } from "@/components/InviteModal";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { Toaster } from "@/components/ui/sonner";
-import type { Player } from "@/lib/checkers";
+import { emptyEvents, type MatchEvents, type Player } from "@/lib/checkers";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 
