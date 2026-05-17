@@ -29,6 +29,16 @@ const DIFFICULTY_LABEL: Record<Difficulty, string> = {
   grandmaster: "Grandmaster AI",
 };
 
+const INITIAL_TIME_MS = 3 * 60 * 1000;
+
+function formatClock(ms: number): string {
+  const safe = Math.max(0, ms);
+  const totalSeconds = Math.ceil(safe / 1000);
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+}
+
 /**
  * Hot-seat / vs-AI checkers board.
  * - Local 2-Player: P1 and P2 alternate clicking.
@@ -45,6 +55,11 @@ export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
   const [mode, setMode] = useState<Mode>("ai");
   const [difficulty, setDifficulty] = useState<Difficulty>("cyber");
   const [aiThinking, setAiThinking] = useState(false);
+
+  // Blitz clocks (chess-style). Each player has 3:00 total.
+  const [timeP1, setTimeP1] = useState(INITIAL_TIME_MS);
+  const [timeP2, setTimeP2] = useState(INITIAL_TIME_MS);
+  const [timeoutLoss, setTimeoutLoss] = useState<Player | null>(null);
 
   const legalForSelected = useMemo<Move[]>(
     () => (selected ? getMovesFrom(board, turn, selected) : []),
@@ -115,8 +130,42 @@ export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
     setMoveCount(0);
     setWinner(null);
     setAiThinking(false);
+    setTimeP1(INITIAL_TIME_MS);
+    setTimeP2(INITIAL_TIME_MS);
+    setTimeoutLoss(null);
     onNewGame?.();
   }, [onNewGame]);
+
+  // Blitz timer: tick the active player's clock unless the game is over or AI is thinking.
+  useEffect(() => {
+    if (winner || aiThinking) return;
+    let last = Date.now();
+    const id = setInterval(() => {
+      const now = Date.now();
+      const delta = now - last;
+      last = now;
+      if (turn === "p1") {
+        setTimeP1((prev) => Math.max(0, prev - delta));
+      } else {
+        setTimeP2((prev) => Math.max(0, prev - delta));
+      }
+    }, 100);
+    return () => clearInterval(id);
+  }, [turn, winner, aiThinking]);
+
+  // Detect timeout loss.
+  useEffect(() => {
+    if (winner) return;
+    if (timeP1 <= 0) {
+      setTimeoutLoss("p1");
+      setWinner("p2");
+      onGameEnd?.("p2", { mode, difficulty: mode === "ai" ? difficulty : undefined });
+    } else if (timeP2 <= 0) {
+      setTimeoutLoss("p2");
+      setWinner("p1");
+      onGameEnd?.("p1", { mode, difficulty: mode === "ai" ? difficulty : undefined });
+    }
+  }, [timeP1, timeP2, winner, mode, difficulty, onGameEnd]);
 
   // Reset the board when the user switches mode or difficulty mid-game.
   useEffect(() => {
@@ -219,8 +268,49 @@ export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
         </div>
       </div>
 
+      {/* Blitz dual timer */}
+      <div className="flex items-stretch justify-between gap-3 w-full max-w-[640px]">
+        {(["p1", "p2"] as const).map((p) => {
+          const ms = p === "p1" ? timeP1 : timeP2;
+          const isActive = !winner && turn === p && !aiThinking;
+          const low = ms <= 30000;
+          const label =
+            p === "p1" ? "White" : mode === "ai" ? DIFFICULTY_LABEL[difficulty] : "Charcoal";
+          return (
+            <div
+              key={p}
+              className={cn(
+                "flex-1 flex items-center justify-between px-5 py-3 rounded-sm border bg-card transition-all",
+                isActive
+                  ? "border-[var(--gold)]/70 shadow-luxe"
+                  : "border-border/60 opacity-60"
+              )}
+            >
+              <div className="flex flex-col">
+                <span className="text-[9px] uppercase tracking-[0.3em] text-muted-foreground">
+                  {p === "p1" ? "Player 1" : mode === "ai" ? "AI Opponent" : "Player 2"}
+                </span>
+                <span className="text-[10px] uppercase tracking-[0.25em] text-foreground/80">
+                  {label}
+                </span>
+              </div>
+              <span
+                className={cn(
+                  "font-mono tabular-nums text-3xl tracking-[0.15em] transition-colors",
+                  low ? "text-destructive" : isActive ? "text-[var(--gold)]" : "text-foreground/70",
+                  isActive && "animate-pulse"
+                )}
+              >
+                {formatClock(ms)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
       <div className="relative p-5 rounded-sm bg-gradient-to-b from-[oklch(0.22_0.012_250)] to-[oklch(0.14_0.01_250)] shadow-luxe">
         <div className="absolute inset-3 rounded-sm pointer-events-none ring-1 ring-[var(--gold)]/40" />
+
 
         <div
           className={cn(
@@ -306,6 +396,44 @@ export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
         <span className="w-px h-3 bg-border" />
         <span>Forced Capture · Multi-Jump</span>
       </div>
+
+      {/* Timeout modal */}
+      {timeoutLoss && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm animate-fade-in">
+          <div className="relative max-w-md w-[90%] rounded-sm border border-[var(--gold)]/50 bg-card p-8 shadow-luxe animate-scale-in">
+            <div className="absolute inset-2 rounded-sm pointer-events-none ring-1 ring-[var(--gold)]/30" />
+            <div className="flex flex-col items-center text-center gap-4">
+              <span className="text-[10px] uppercase tracking-[0.4em] text-[var(--gold)]">
+                Blitz · Time Expired
+              </span>
+              <h2 className="font-serif text-3xl tracking-tight text-foreground">
+                {timeoutLoss === "p1" ? "Defeat by Timeout" : "Victory by Timeout"}
+              </h2>
+              <p className="text-sm text-muted-foreground max-w-sm">
+                {timeoutLoss === "p1"
+                  ? "Your clock reached 00:00. In Blitz, tempo is everything."
+                  : `${mode === "ai" ? DIFFICULTY_LABEL[difficulty] : "Charcoal"}'s clock reached 00:00. Tempo prevails.`}
+              </p>
+              <div className="flex items-center gap-6 mt-2 font-mono tabular-nums text-sm">
+                <span className="text-muted-foreground">
+                  White <span className={cn("ml-2", timeoutLoss === "p1" ? "text-destructive" : "text-foreground")}>{formatClock(timeP1)}</span>
+                </span>
+                <span className="w-px h-4 bg-border" />
+                <span className="text-muted-foreground">
+                  Charcoal <span className={cn("ml-2", timeoutLoss === "p2" ? "text-destructive" : "text-foreground")}>{formatClock(timeP2)}</span>
+                </span>
+              </div>
+              <button
+                onClick={reset}
+                className="mt-4 px-6 py-2.5 text-[10px] uppercase tracking-[0.3em] bg-primary text-primary-foreground rounded-sm shadow-luxe hover:opacity-90 transition-opacity"
+              >
+                New Game
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
