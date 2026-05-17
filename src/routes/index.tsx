@@ -234,6 +234,7 @@ function Index() {
             turn={turn}
             outcome={outcome}
             resetKey={gameKey}
+            events={matchEvents}
           />
         </div>
 
