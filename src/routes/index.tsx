@@ -45,6 +45,7 @@ function Index() {
   const [moveNumber, setMoveNumber] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
+  const [matchEvents, setMatchEvents] = useState<MatchEvents>(() => emptyEvents());
   const [gameKey, setGameKey] = useState(0);
 
   // Multiplayer state
