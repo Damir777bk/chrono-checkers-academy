@@ -497,6 +497,13 @@ export function CheckersBoard({
                     <span className="absolute inset-2 rounded-full ring-2 ring-[var(--gold)] animate-hint-pulse pointer-events-none" />
                   )}
 
+                  {hintTo && (
+                    <span
+                      className="absolute inset-2 rounded-full border-2 border-dashed border-[var(--gold)] bg-[var(--gold)]/15 animate-hint-pulse pointer-events-none"
+                      aria-label="Coach suggested destination"
+                    />
+                  )}
+
                   {piece && (
                     <div
                       className={cn(
