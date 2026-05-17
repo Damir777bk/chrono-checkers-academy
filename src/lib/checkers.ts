@@ -124,13 +124,43 @@ export function evaluate(board: Board): number {
   return s;
 }
 
-export function bestAIMove(board: Board, depth = 3): Move | null {
+export type Difficulty = "novice" | "cyber" | "grandmaster";
+
+/** Pick a move for the AI (always plays p2). Mandatory captures are already
+ *  enforced by getAllMoves (returns only jumps when any are available). */
+export function pickAIMove(board: Board, difficulty: Difficulty): Move | null {
   const moves = getAllMoves(board, "p2");
   if (!moves.length) return null;
+
+  if (difficulty === "novice") {
+    return moves[Math.floor(Math.random() * moves.length)];
+  }
+
+  if (difficulty === "cyber") {
+    // Greedy heuristic: maximise captures gained and minimise pieces left
+    // exposed to the opponent's reply. Small random tiebreaker.
+    let best = moves[0];
+    let bestScore = -Infinity;
+    for (const m of moves) {
+      const after = applyMove(board, m);
+      const gain = m.captures.length * 10;
+      const replies = getAllMoves(after, "p1");
+      const exposure = replies.reduce((s, r) => s + r.captures.length, 0);
+      const promo = !board[m.from.r][m.from.c]?.king && m.to.r === 7 ? 4 : 0;
+      const score = gain + promo - exposure * 3 + Math.random() * 0.1;
+      if (score > bestScore) {
+        bestScore = score;
+        best = m;
+      }
+    }
+    return best;
+  }
+
+  // Grandmaster: minimax with alpha-beta pruning.
   let best = moves[0];
   let bestScore = -Infinity;
   for (const m of moves) {
-    const score = minimax(applyMove(board, m), depth - 1, -Infinity, Infinity, false);
+    const score = minimax(applyMove(board, m), 3, -Infinity, Infinity, false);
     if (score > bestScore) {
       bestScore = score;
       best = m;
