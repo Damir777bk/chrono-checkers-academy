@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   applyMove,
+  emptyEvents,
   getAllMoves,
   getMovesFrom,
   initialBoard,
   pickAIMove,
   type Board,
   type Difficulty,
+  type MatchEvents,
   type Move,
   type Player,
   type Pos,
@@ -18,7 +20,11 @@ const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 type Mode = "local" | "ai";
 
 interface Props {
-  onGameEnd?: (winner: Player | "draw", meta: { mode: "local" | "ai"; difficulty?: string }) => void;
+  onGameEnd?: (
+    winner: Player | "draw",
+    meta: { mode: "local" | "ai"; difficulty?: string },
+    events: MatchEvents,
+  ) => void;
   onTurnChange?: (player: Player, moveNum: number) => void;
   onNewGame?: () => void;
 }
@@ -61,9 +67,24 @@ export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
   const [timeP2, setTimeP2] = useState(INITIAL_TIME_MS);
   const [timeoutLoss, setTimeoutLoss] = useState<Player | null>(null);
 
+  // Match telemetry for the AI Coach.
+  const eventsRef = useRef<MatchEvents>(emptyEvents());
+  const prevP1KingsRef = useRef<number>(0);
+
   const legalForSelected = useMemo<Move[]>(
     () => (selected ? getMovesFrom(board, turn, selected) : []),
     [board, turn, selected]
+  );
+
+  // Helper: build a finalised events snapshot at game end.
+  const finalizeEvents = useCallback(
+    (winnerVal: Player | "draw", finalMoves: number): MatchEvents => {
+      const ev = eventsRef.current;
+      ev.totalMoves = finalMoves;
+      ev.earlyDefeat = winnerVal === "p2" && finalMoves < 15;
+      return { ...ev };
+    },
+    [],
   );
 
   // End-of-game detection.
@@ -73,9 +94,27 @@ export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
     if (!getAllMoves(board, turn).length) {
       const w: Player = turn === "p1" ? "p2" : "p1";
       setWinner(w);
-      onGameEnd?.(w, { mode, difficulty: mode === "ai" ? difficulty : undefined });
+      onGameEnd?.(
+        w,
+        { mode, difficulty: mode === "ai" ? difficulty : undefined },
+        finalizeEvents(w, moveCount),
+      );
     }
-  }, [turn, board, winner, moveCount, onGameEnd, onTurnChange, mode, difficulty]);
+  }, [turn, board, winner, moveCount, onGameEnd, onTurnChange, mode, difficulty, finalizeEvents]);
+
+  // Track P1 king losses: when P1's king count drops between renders.
+  useEffect(() => {
+    let kings = 0;
+    for (let r = 0; r < 8; r++)
+      for (let c = 0; c < 8; c++) {
+        const p = board[r][c];
+        if (p && p.player === "p1" && p.king) kings++;
+      }
+    if (kings < prevP1KingsRef.current) {
+      eventsRef.current.kingLossesP1 += prevP1KingsRef.current - kings;
+    }
+    prevP1KingsRef.current = kings;
+  }, [board]);
 
   // AI driver: when it's p2's turn in AI mode, think for ~1s then play.
   useEffect(() => {
@@ -115,6 +154,16 @@ export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
       }
 
       if (piece && piece.player === turn) {
+        // Detect "missed capture": user grabbed a piece that has no legal move
+        // because a mandatory capture exists for a different piece.
+        if (turn === "p1") {
+          const all = getAllMoves(board, "p1");
+          const hasJumps = all.some((m) => m.captures.length > 0);
+          const pieceMoves = all.filter((m) => m.from.r === r && m.from.c === c);
+          if (hasJumps && pieceMoves.length === 0) {
+            eventsRef.current.missedCaptures += 1;
+          }
+        }
         setSelected({ r, c });
       } else {
         setSelected(null);
@@ -133,6 +182,8 @@ export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
     setTimeP1(INITIAL_TIME_MS);
     setTimeP2(INITIAL_TIME_MS);
     setTimeoutLoss(null);
+    eventsRef.current = emptyEvents();
+    prevP1KingsRef.current = 0;
     onNewGame?.();
   }, [onNewGame]);
 
@@ -145,7 +196,11 @@ export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
       const delta = now - last;
       last = now;
       if (turn === "p1") {
-        setTimeP1((prev) => Math.max(0, prev - delta));
+        setTimeP1((prev) => {
+          const next = Math.max(0, prev - delta);
+          if (next < 30000) eventsRef.current.blitzPressureP1 = true;
+          return next;
+        });
       } else {
         setTimeP2((prev) => Math.max(0, prev - delta));
       }
@@ -159,13 +214,21 @@ export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
     if (timeP1 <= 0) {
       setTimeoutLoss("p1");
       setWinner("p2");
-      onGameEnd?.("p2", { mode, difficulty: mode === "ai" ? difficulty : undefined });
+      onGameEnd?.(
+        "p2",
+        { mode, difficulty: mode === "ai" ? difficulty : undefined },
+        finalizeEvents("p2", moveCount),
+      );
     } else if (timeP2 <= 0) {
       setTimeoutLoss("p2");
       setWinner("p1");
-      onGameEnd?.("p1", { mode, difficulty: mode === "ai" ? difficulty : undefined });
+      onGameEnd?.(
+        "p1",
+        { mode, difficulty: mode === "ai" ? difficulty : undefined },
+        finalizeEvents("p1", moveCount),
+      );
     }
-  }, [timeP1, timeP2, winner, mode, difficulty, onGameEnd]);
+  }, [timeP1, timeP2, winner, mode, difficulty, onGameEnd, moveCount, finalizeEvents]);
 
   // Reset the board when the user switches mode or difficulty mid-game.
   useEffect(() => {

@@ -1,4 +1,21 @@
 export type Player = "p1" | "p2";
+
+/** Telemetry the AI Coach uses to produce context-aware feedback. */
+export type MatchEvents = {
+  missedCaptures: number;
+  kingLossesP1: number;
+  blitzPressureP1: boolean;
+  earlyDefeat: boolean;
+  totalMoves: number;
+};
+
+export const emptyEvents = (): MatchEvents => ({
+  missedCaptures: 0,
+  kingLossesP1: 0,
+  blitzPressureP1: false,
+  earlyDefeat: false,
+  totalMoves: 0,
+});
 export type Piece = { player: Player; king: boolean };
 export type Board = (Piece | null)[][]; // 8x8, row 0 top
 

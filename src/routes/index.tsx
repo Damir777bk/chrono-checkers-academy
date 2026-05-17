@@ -9,7 +9,7 @@ import { OnlineCheckersBoard } from "@/components/OnlineCheckersBoard";
 import { InviteModal } from "@/components/InviteModal";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { Toaster } from "@/components/ui/sonner";
-import type { Player } from "@/lib/checkers";
+import { emptyEvents, type MatchEvents, type Player } from "@/lib/checkers";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -45,6 +45,7 @@ function Index() {
   const [moveNumber, setMoveNumber] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
+  const [matchEvents, setMatchEvents] = useState<MatchEvents>(() => emptyEvents());
   const [gameKey, setGameKey] = useState(0);
 
   // Multiplayer state
@@ -94,7 +95,8 @@ function Index() {
   const handleEnd = useCallback(
     async (
       winner: Player | "draw",
-      meta: { mode: "local" | "ai" | "online"; difficulty?: string }
+      meta: { mode: "local" | "ai" | "online"; difficulty?: string },
+      events?: MatchEvents,
     ) => {
       setGameOver(true);
       // For online matches, the local player's color determines win/loss.
@@ -102,6 +104,7 @@ function Index() {
       const result: Outcome =
         winner === "draw" ? "draw" : winner === myColor ? "win" : "loss";
       setOutcome(result);
+      setMatchEvents(events ?? { ...emptyEvents(), totalMoves: moveNumber });
 
       if (!user || !profile) return;
 
@@ -144,6 +147,7 @@ function Index() {
   const handleNewGame = useCallback(() => {
     setGameOver(false);
     setOutcome(null);
+    setMatchEvents(emptyEvents());
     setGameKey((k) => k + 1);
   }, []);
 
@@ -230,6 +234,7 @@ function Index() {
             turn={turn}
             outcome={outcome}
             resetKey={gameKey}
+            events={matchEvents}
           />
         </div>
 
