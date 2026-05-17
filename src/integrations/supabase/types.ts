@@ -14,7 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      games: {
+        Row: {
+          created_at: string
+          difficulty: string | null
+          id: string
+          moves: number
+          opponent_type: string
+          rating_change: number
+          result: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          difficulty?: string | null
+          id?: string
+          moves?: number
+          opponent_type: string
+          rating_change?: number
+          result: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          difficulty?: string | null
+          id?: string
+          moves?: number
+          opponent_type?: string
+          rating_change?: number
+          result?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          city: Database["public"]["Enums"]["city"]
+          created_at: string
+          id: string
+          losses: number
+          rating: number
+          username: string
+          wins: number
+        }
+        Insert: {
+          city: Database["public"]["Enums"]["city"]
+          created_at?: string
+          id: string
+          losses?: number
+          rating?: number
+          username: string
+          wins?: number
+        }
+        Update: {
+          city?: Database["public"]["Enums"]["city"]
+          created_at?: string
+          id?: string
+          losses?: number
+          rating?: number
+          username?: string
+          wins?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +85,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      city: "Almaty" | "Astana" | "Karaganda"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +212,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      city: ["Almaty", "Astana", "Karaganda"],
+    },
   },
 } as const
