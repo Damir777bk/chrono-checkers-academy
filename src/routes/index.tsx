@@ -229,7 +229,7 @@ function Index() {
       <main className="max-w-[1400px] mx-auto px-6 lg:px-8 py-10">
         <div className="text-center mb-10">
           <div className="text-[10px] uppercase tracking-[0.4em] text-[var(--gold)]">
-            Live Table · Est. 2024
+            Live Table · Est. 2026
           </div>
           <h1 className="font-display text-5xl md:text-6xl mt-3 leading-none">
             The quiet art of{" "}
