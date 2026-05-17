@@ -186,7 +186,7 @@ function Index() {
 
   return (
     <div className="min-h-screen bg-background">
-      <TopNav onUpgrade={() => setUpgradeOpen(true)} />
+      <TopNav onUpgrade={openGenericUpgrade} />
 
       <main className="max-w-[1400px] mx-auto px-6 lg:px-8 py-10">
         <div className="text-center mb-10">
