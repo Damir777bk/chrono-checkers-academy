@@ -1,20 +1,30 @@
-import { useEffect } from "react";
-import { X, Check } from "lucide-react";
+import { useEffect, useState } from "react";
+import { X, Check, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth-context";
 
 interface Props {
   open: boolean;
   onClose: () => void;
+  /** Optional contextual reason shown above the price card. */
+  reason?: string;
+  /** Called after the simulated checkout succeeds. */
+  onUpgraded?: () => void;
 }
 
 const benefits = [
   { title: "Unlimited AI Coach Insights", desc: "Real-time tactical analysis on every move, not just end-of-game." },
+  { title: "Custom Premium Board Themes", desc: "Midnight Cyber, Royal Marble — hand-crafted board aesthetics." },
   { title: "Advanced Strategy Curriculum", desc: "47 master classes from Grandmasters across Eurasia." },
-  { title: "Custom Marble Themes", desc: "Onyx, Carrara, Verde Alpi — hand-crafted board aesthetics." },
   { title: "Opening Repertoire Builder", desc: "Train and memorize personalized opening trees." },
   { title: "Tournament Eligibility", desc: "Compete in seasonal ranked tournaments with Elo certification." },
 ];
 
-export function UpgradeModal({ open, onClose }: Props) {
+export function UpgradeModal({ open, onClose, reason, onUpgraded }: Props) {
+  const { user, profile, refreshProfile } = useAuth();
+  const [processing, setProcessing] = useState(false);
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     if (open) {
@@ -29,6 +39,31 @@ export function UpgradeModal({ open, onClose }: Props) {
 
   if (!open) return null;
 
+  const alreadyPro = profile?.is_premium === true;
+
+  const handleCheckout = async () => {
+    if (!user) {
+      toast.error("Sign in first to start your membership");
+      return;
+    }
+    setProcessing(true);
+    // Simulated checkout — 1.4s artificial latency for premium feel.
+    await new Promise((r) => setTimeout(r, 1400));
+    const { error } = await supabase
+      .from("profiles")
+      .update({ is_premium: true })
+      .eq("id", user.id);
+    setProcessing(false);
+    if (error) {
+      toast.error("Checkout failed — please try again");
+      return;
+    }
+    await refreshProfile();
+    toast.success("Welcome to Academy Pro · All themes unlocked");
+    onUpgraded?.();
+    onClose();
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-piece-place"
@@ -39,7 +74,6 @@ export function UpgradeModal({ open, onClose }: Props) {
         onClick={(e) => e.stopPropagation()}
         className="relative w-full max-w-xl bg-card border border-border rounded-sm shadow-luxe animate-modal-rise"
       >
-        {/* Gold corner accents */}
         <span className="absolute top-0 left-0 w-8 h-px bg-[var(--gold)]" />
         <span className="absolute top-0 left-0 w-px h-8 bg-[var(--gold)]" />
         <span className="absolute top-0 right-0 w-8 h-px bg-[var(--gold)]" />
@@ -58,7 +92,7 @@ export function UpgradeModal({ open, onClose }: Props) {
         </button>
 
         <div className="p-10">
-          <div className="text-center mb-8">
+          <div className="text-center mb-6">
             <div className="text-[10px] uppercase tracking-[0.4em] text-[var(--gold)]">Academy Pro</div>
             <h2 className="font-display text-4xl mt-3 leading-tight">
               Master the game.
@@ -66,12 +100,18 @@ export function UpgradeModal({ open, onClose }: Props) {
               <span className="italic text-[var(--emerald-deep)]">Quietly.</span>
             </h2>
             <div className="hairline mx-auto w-32 my-6" />
-            <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
-              An invitation-quality membership for serious students of checkers strategy.
-            </p>
+            {reason ? (
+              <p className="text-sm text-foreground/80 max-w-sm mx-auto leading-relaxed italic">
+                {reason}
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
+                An invitation-quality membership for serious students of checkers strategy.
+              </p>
+            )}
           </div>
 
-          <ul className="space-y-4 mb-8">
+          <ul className="space-y-3 mb-8">
             {benefits.map((b) => (
               <li key={b.title} className="flex gap-4">
                 <span className="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full bg-gradient-gold flex items-center justify-center">
@@ -91,12 +131,28 @@ export function UpgradeModal({ open, onClose }: Props) {
                 $9<span className="text-base text-muted-foreground font-sans">/month</span>
               </div>
               <div className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1">
-                Cancel anytime · 14-day trial
+                Cancel anytime · Instant access
               </div>
             </div>
-            <button className="px-6 py-3 bg-primary text-primary-foreground rounded-sm text-xs uppercase tracking-[0.25em] font-medium border border-[var(--gold)] hover:bg-[var(--emerald-forest)] transition-colors">
-              Begin Trial
-            </button>
+            {alreadyPro ? (
+              <span className="px-6 py-3 bg-gradient-gold text-[var(--charcoal)] rounded-sm text-xs uppercase tracking-[0.25em] font-semibold">
+                ✓ Pro Active
+              </span>
+            ) : (
+              <button
+                onClick={handleCheckout}
+                disabled={processing}
+                className="px-6 py-3 bg-primary text-primary-foreground rounded-sm text-xs uppercase tracking-[0.25em] font-medium border border-[var(--gold)] hover:bg-[var(--emerald-forest)] transition-colors disabled:opacity-70 flex items-center gap-2"
+              >
+                {processing ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Processing
+                  </>
+                ) : (
+                  "Complete Checkout"
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>

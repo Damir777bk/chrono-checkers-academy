@@ -8,8 +8,10 @@ import { CheckersBoard } from "@/components/CheckersBoard";
 import { OnlineCheckersBoard } from "@/components/OnlineCheckersBoard";
 import { InviteModal } from "@/components/InviteModal";
 import { UpgradeModal } from "@/components/UpgradeModal";
+import { ThemeSelector } from "@/components/ThemeSelector";
 import { Toaster } from "@/components/ui/sonner";
 import { emptyEvents, type MatchEvents, type Player } from "@/lib/checkers";
+import { THEMES, type ThemeId } from "@/lib/themes";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -41,6 +43,31 @@ type RoomInfo = { id: string; role: Player };
 function Index() {
   const { user, profile, refreshProfile } = useAuth();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeReason, setUpgradeReason] = useState<string | undefined>(undefined);
+  const [theme, setTheme] = useState<ThemeId>("classic");
+  const isPremium = profile?.is_premium === true;
+  const themeClass = THEMES.find((t) => t.id === theme)?.className ?? "";
+
+  const handleThemeSelect = useCallback(
+    (id: ThemeId) => {
+      const t = THEMES.find((x) => x.id === id);
+      if (!t) return;
+      if (t.premium && !isPremium) {
+        setUpgradeReason(
+          "Unlock custom premium themes and unlimited AI Coaching for just $9/mo.",
+        );
+        setUpgradeOpen(true);
+        return;
+      }
+      setTheme(id);
+    },
+    [isPremium],
+  );
+
+  const openGenericUpgrade = useCallback(() => {
+    setUpgradeReason(undefined);
+    setUpgradeOpen(true);
+  }, []);
   const [turn, setTurn] = useState<Player>("p1");
   const [moveNumber, setMoveNumber] = useState(0);
   const [gameOver, setGameOver] = useState(false);
@@ -159,7 +186,7 @@ function Index() {
 
   return (
     <div className="min-h-screen bg-background">
-      <TopNav onUpgrade={() => setUpgradeOpen(true)} />
+      <TopNav onUpgrade={openGenericUpgrade} />
 
       <main className="max-w-[1400px] mx-auto px-6 lg:px-8 py-10">
         <div className="text-center mb-10">
@@ -208,24 +235,31 @@ function Index() {
         <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr_320px] gap-8 items-start">
           <Leaderboard />
 
-          <div className="flex justify-center">
-            {room ? (
-              <OnlineCheckersBoard
-                key={`${room.id}-${gameKey}`}
-                roomId={room.id}
-                localPlayer={room.role}
-                onGameEnd={handleEnd}
-                onTurnChange={handleTurn}
-                onNewGame={handleNewGame}
-                onOpponentJoined={handleOpponentJoined}
-              />
-            ) : (
-              <CheckersBoard
-                onGameEnd={handleEnd}
-                onTurnChange={handleTurn}
-                onNewGame={handleNewGame}
-              />
-            )}
+          <div className="flex flex-col items-center">
+            <ThemeSelector
+              current={theme}
+              isPremium={isPremium}
+              onSelect={handleThemeSelect}
+            />
+            <div className={themeClass}>
+              {room ? (
+                <OnlineCheckersBoard
+                  key={`${room.id}-${gameKey}`}
+                  roomId={room.id}
+                  localPlayer={room.role}
+                  onGameEnd={handleEnd}
+                  onTurnChange={handleTurn}
+                  onNewGame={handleNewGame}
+                  onOpponentJoined={handleOpponentJoined}
+                />
+              ) : (
+                <CheckersBoard
+                  onGameEnd={handleEnd}
+                  onTurnChange={handleTurn}
+                  onNewGame={handleNewGame}
+                />
+              )}
+            </div>
           </div>
 
           <AICoach
@@ -251,7 +285,11 @@ function Index() {
         waiting={!opponentJoined}
         onClose={() => setInviteOpen(false)}
       />
-      <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} />
+      <UpgradeModal
+        open={upgradeOpen}
+        reason={upgradeReason}
+        onClose={() => setUpgradeOpen(false)}
+      />
       <Toaster />
     </div>
   );
