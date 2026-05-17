@@ -6,6 +6,7 @@ import {
   getMovesFrom,
   initialBoard,
   pickAIMove,
+  pickBestMoveFor,
   type Board,
   type Difficulty,
   type MatchEvents,
@@ -27,6 +28,10 @@ interface Props {
   ) => void;
   onTurnChange?: (player: Player, moveNum: number) => void;
   onNewGame?: () => void;
+  /** Increment to request a fresh coach hint for the side currently to move. */
+  hintToken?: number;
+  /** Fires when a hint is computed (or cleared with null). */
+  onHintComputed?: (move: Move | null) => void;
 }
 
 const DIFFICULTY_LABEL: Record<Difficulty, string> = {
@@ -62,12 +67,19 @@ function formatClock(ms: number): string {
  * - Battle AI: P1 (player) vs P2 (AI). Difficulty configurable.
  * Rule enforcement (forced capture, multi-jump, kings) lives in lib/checkers.
  */
-export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
+export function CheckersBoard({
+  onGameEnd,
+  onTurnChange,
+  onNewGame,
+  hintToken,
+  onHintComputed,
+}: Props) {
   const [board, setBoard] = useState<Board>(initialBoard);
   const [turn, setTurn] = useState<Player>("p1");
   const [selected, setSelected] = useState<Pos | null>(null);
   const [moveCount, setMoveCount] = useState(0);
   const [winner, setWinner] = useState<Player | "draw" | null>(null);
+  const [hint, setHint] = useState<Move | null>(null);
 
   const [mode, setMode] = useState<Mode>("ai");
   const [difficulty, setDifficulty] = useState<Difficulty>("cyber");
@@ -151,9 +163,18 @@ export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
 
   const humanCanClick = !winner && !aiThinking && (mode === "local" || turn === "p1");
 
+  const clearHint = useCallback(() => {
+    setHint((prev) => {
+      if (prev) onHintComputed?.(null);
+      return null;
+    });
+  }, [onHintComputed]);
+
   const handleSquareClick = useCallback(
     (r: number, c: number) => {
       if (!humanCanClick) return;
+      // Any user interaction clears an active hint highlight.
+      clearHint();
       const piece = board[r][c];
 
       if (selected) {
@@ -183,8 +204,20 @@ export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
         setSelected(null);
       }
     },
-    [board, humanCanClick, legalForSelected, selected, turn]
+    [board, humanCanClick, legalForSelected, selected, turn, clearHint]
   );
+
+  // Compute a coach hint whenever the parent bumps hintToken.
+  const lastHintTokenRef = useRef<number | undefined>(hintToken);
+  useEffect(() => {
+    if (hintToken === undefined) return;
+    if (hintToken === lastHintTokenRef.current) return;
+    lastHintTokenRef.current = hintToken;
+    if (winner || aiThinking) return;
+    const move = pickBestMoveFor(board, turn);
+    setHint(move);
+    onHintComputed?.(move);
+  }, [hintToken, board, turn, winner, aiThinking, onHintComputed]);
 
   const reset = useCallback(() => {
     setBoard(initialBoard());
@@ -193,6 +226,8 @@ export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
     setMoveCount(0);
     setWinner(null);
     setAiThinking(false);
+    setHint(null);
+    onHintComputed?.(null);
     setTimeP1(initialClockMs);
     setTimeP2(initialClockMs);
     setTimeoutLoss(null);
@@ -423,6 +458,8 @@ export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
               const dark = (r + c) % 2 === 1;
               const sel = selected?.r === r && selected?.c === c;
               const target = isTarget(r, c);
+              const hintFrom = hint && hint.from.r === r && hint.from.c === c;
+              const hintTo = hint && hint.to.r === r && hint.to.c === c;
               return (
                 <button
                   key={`${r}-${c}`}
@@ -460,12 +497,20 @@ export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
                     <span className="absolute inset-2 rounded-full ring-2 ring-[var(--gold)] animate-hint-pulse pointer-events-none" />
                   )}
 
+                  {hintTo && (
+                    <span
+                      className="absolute inset-2 rounded-full border-2 border-dashed border-[var(--gold)] bg-[var(--gold)]/15 animate-hint-pulse pointer-events-none"
+                      aria-label="Coach suggested destination"
+                    />
+                  )}
+
                   {piece && (
                     <div
                       className={cn(
                         "relative w-[78%] h-[78%] rounded-full animate-piece-place shadow-piece",
                         piece.player === "p1" ? "marble-ivory" : "marble-charcoal",
-                        sel && "animate-select-pulse"
+                        sel && "animate-select-pulse",
+                        hintFrom && "ring-4 ring-[var(--gold)] shadow-[0_0_24px_6px_var(--gold)] animate-hint-pulse"
                       )}
                     >
                       <span className="absolute inset-0 rounded-full ring-[1.5px] ring-[var(--gold)]/80" />

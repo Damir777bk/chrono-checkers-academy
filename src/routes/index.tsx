@@ -10,10 +10,13 @@ import { InviteModal } from "@/components/InviteModal";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { ThemeSelector } from "@/components/ThemeSelector";
 import { Toaster } from "@/components/ui/sonner";
-import { emptyEvents, type MatchEvents, type Player } from "@/lib/checkers";
+import { emptyEvents, type MatchEvents, type Move, type Player } from "@/lib/checkers";
 import { THEMES, type ThemeId } from "@/lib/themes";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
+
+const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
+const squareName = (r: number, c: number) => `${FILES[c]}${8 - r}`;
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -80,6 +83,39 @@ function Index() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [opponentJoined, setOpponentJoined] = useState(false);
   const [inviteUrl, setInviteUrl] = useState("");
+
+  // Live Coach Hints
+  const MAX_FREE_HINTS = 2;
+  const [hintsUsed, setHintsUsed] = useState(0);
+  const [hintToken, setHintToken] = useState(0);
+  const [hintSuggestion, setHintSuggestion] = useState<string | null>(null);
+
+  const handleRequestHint = useCallback(() => {
+    if (!isPremium && hintsUsed >= MAX_FREE_HINTS) {
+      setUpgradeReason(
+        "Unlock unlimited live hints and master your strategy with Pro!",
+      );
+      setUpgradeOpen(true);
+      return;
+    }
+    if (!isPremium) setHintsUsed((n) => n + 1);
+    setHintToken((t) => t + 1);
+  }, [isPremium, hintsUsed]);
+
+  const handleHintComputed = useCallback((move: Move | null) => {
+    if (!move) {
+      setHintSuggestion(null);
+      return;
+    }
+    const from = squareName(move.from.r, move.from.c);
+    const to = squareName(move.to.r, move.to.c);
+    const verb = move.captures.length > 0
+      ? `capture toward ${to}`
+      : `advance to ${to}`;
+    setHintSuggestion(
+      `Coach suggests: ${verb} from ${from} — strongest line on the board right now.`,
+    );
+  }, []);
 
   // Detect ?room= in URL on mount (client-only). Host marker is in sessionStorage.
   useEffect(() => {
@@ -176,6 +212,8 @@ function Index() {
     setOutcome(null);
     setMatchEvents(emptyEvents());
     setGameKey((k) => k + 1);
+    setHintsUsed(0);
+    setHintSuggestion(null);
   }, []);
 
   const handleOpponentJoined = useCallback(() => {
@@ -257,6 +295,8 @@ function Index() {
                   onGameEnd={handleEnd}
                   onTurnChange={handleTurn}
                   onNewGame={handleNewGame}
+                  hintToken={hintToken}
+                  onHintComputed={handleHintComputed}
                 />
               )}
             </div>
@@ -269,6 +309,12 @@ function Index() {
             outcome={outcome}
             resetKey={gameKey}
             events={matchEvents}
+            isPremium={isPremium}
+            hintsUsed={hintsUsed}
+            maxHints={MAX_FREE_HINTS}
+            canRequestHint={!gameOver && !room && turn === "p1"}
+            hintSuggestion={hintSuggestion}
+            onRequestHint={room ? undefined : handleRequestHint}
           />
         </div>
 
