@@ -182,6 +182,45 @@ export function AICoach({
             </div>
           </div>
 
+          {/* Live Coach Hint */}
+          {onRequestHint && (
+            <div className="space-y-2 rounded-sm border border-[var(--gold)]/30 bg-[var(--gold)]/[0.04] p-3">
+              <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.25em]">
+                <span className="text-[var(--gold)] flex items-center gap-1.5">
+                  <Sparkles className="w-3 h-3" /> Live Coach
+                </span>
+                <span className="text-muted-foreground tabular-nums">
+                  {isPremium ? "Unlimited" : `Hints left: ${Math.max(0, maxHints - hintsUsed)}/${maxHints}`}
+                </span>
+              </div>
+              <button
+                onClick={onRequestHint}
+                disabled={!canRequestHint}
+                className={cn(
+                  "group relative w-full overflow-hidden py-2.5 px-4 rounded-sm text-xs uppercase tracking-[0.25em] font-medium border transition-all",
+                  canRequestHint
+                    ? "border-[var(--gold)] text-[var(--gold)] bg-gradient-to-r from-[var(--gold)]/10 via-[var(--gold)]/20 to-[var(--gold)]/10 shadow-[0_0_18px_-4px_var(--gold)] hover:shadow-[0_0_28px_-2px_var(--gold)] hover:bg-[var(--gold)]/20"
+                    : "border-border bg-muted text-muted-foreground cursor-not-allowed"
+                )}
+              >
+                <span className="flex items-center justify-center gap-2">
+                  <Lightbulb className={cn("w-3.5 h-3.5", canRequestHint && "animate-pulse")} />
+                  Get Coach Hint
+                </span>
+              </button>
+              {hintSuggestion && (
+                <p className="text-[11px] leading-relaxed text-foreground/85 italic border-l-2 border-[var(--gold)] pl-3 animate-piece-place">
+                  {hintSuggestion}
+                </p>
+              )}
+              {!canRequestHint && !hintSuggestion && (
+                <p className="text-[10px] text-muted-foreground italic leading-relaxed">
+                  Hints are available on your turn while the match is in play.
+                </p>
+              )}
+            </div>
+          )}
+
           <button
             onClick={requestReview}
             disabled={!enabled || phase === "scanning"}
