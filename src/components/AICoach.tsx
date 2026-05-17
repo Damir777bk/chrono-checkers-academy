@@ -93,7 +93,20 @@ function buildAnalysis(outcome: "win" | "loss" | "draw" | null, ev: MatchEvents)
   return insights;
 }
 
-export function AICoach({ enabled, moveNumber, turn, outcome, resetKey, events }: Props) {
+export function AICoach({
+  enabled,
+  moveNumber,
+  turn,
+  outcome,
+  resetKey,
+  events,
+  isPremium = false,
+  hintsUsed = 0,
+  maxHints = 2,
+  canRequestHint = false,
+  hintSuggestion = null,
+  onRequestHint,
+}: Props) {
   const [phase, setPhase] = useState<"idle" | "scanning" | "done">("idle");
   const [review, setReview] = useState<Insight[] | null>(null);
   const [scanIdx, setScanIdx] = useState(0);
