@@ -130,8 +130,46 @@ export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
     setMoveCount(0);
     setWinner(null);
     setAiThinking(false);
+    setTimeP1(INITIAL_TIME_MS);
+    setTimeP2(INITIAL_TIME_MS);
+    setTimeoutLoss(null);
     onNewGame?.();
   }, [onNewGame]);
+
+  // Blitz timer: tick the active player's clock unless the game is over or AI is thinking.
+  useEffect(() => {
+    if (winner || aiThinking) return;
+    const start = Date.now();
+    const id = setInterval(() => {
+      const now = Date.now();
+      const delta = now - start;
+      if (turn === "p1") {
+        setTimeP1((prev) => {
+          const next = Math.max(0, INITIAL_TIME_MS - (INITIAL_TIME_MS - prev) - 0);
+          // recompute using start snapshot for accuracy
+          return Math.max(0, prev - 100);
+        });
+      } else {
+        setTimeP2((prev) => Math.max(0, prev - 100));
+      }
+      void delta;
+    }, 100);
+    return () => clearInterval(id);
+  }, [turn, winner, aiThinking]);
+
+  // Detect timeout loss.
+  useEffect(() => {
+    if (winner) return;
+    if (timeP1 <= 0) {
+      setTimeoutLoss("p1");
+      setWinner("p2");
+      onGameEnd?.("p2", { mode, difficulty: mode === "ai" ? difficulty : undefined });
+    } else if (timeP2 <= 0) {
+      setTimeoutLoss("p2");
+      setWinner("p1");
+      onGameEnd?.("p1", { mode, difficulty: mode === "ai" ? difficulty : undefined });
+    }
+  }, [timeP1, timeP2, winner, mode, difficulty, onGameEnd]);
 
   // Reset the board when the user switches mode or difficulty mid-game.
   useEffect(() => {
