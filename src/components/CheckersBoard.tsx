@@ -210,17 +210,17 @@ export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
       const delta = now - last;
       last = now;
       if (turn === "p1") {
-        setTimeP1((prev) => {
+        setTimeP1((prev: number) => {
           const next = Math.max(0, prev - delta);
-          if (next < 30000) eventsRef.current.blitzPressureP1 = true;
+          if (timeControl === "blitz" && next < 30000) eventsRef.current.blitzPressureP1 = true;
           return next;
         });
       } else {
-        setTimeP2((prev) => Math.max(0, prev - delta));
+        setTimeP2((prev: number) => Math.max(0, prev - delta));
       }
     }, 100);
     return () => clearInterval(id);
-  }, [turn, winner, aiThinking]);
+  }, [turn, winner, aiThinking, timed, timeControl]);
 
   // Detect timeout loss.
   useEffect(() => {
