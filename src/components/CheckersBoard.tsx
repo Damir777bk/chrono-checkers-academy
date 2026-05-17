@@ -406,6 +406,7 @@ export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
           );
         })}
       </div>
+      )}
 
       <div className="relative p-5 rounded-sm bg-gradient-to-b from-[oklch(0.22_0.012_250)] to-[oklch(0.14_0.01_250)] shadow-luxe">
         <div className="absolute inset-3 rounded-sm pointer-events-none ring-1 ring-[var(--gold)]/40" />
