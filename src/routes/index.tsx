@@ -84,6 +84,39 @@ function Index() {
   const [opponentJoined, setOpponentJoined] = useState(false);
   const [inviteUrl, setInviteUrl] = useState("");
 
+  // Live Coach Hints
+  const MAX_FREE_HINTS = 2;
+  const [hintsUsed, setHintsUsed] = useState(0);
+  const [hintToken, setHintToken] = useState(0);
+  const [hintSuggestion, setHintSuggestion] = useState<string | null>(null);
+
+  const handleRequestHint = useCallback(() => {
+    if (!isPremium && hintsUsed >= MAX_FREE_HINTS) {
+      setUpgradeReason(
+        "Unlock unlimited live hints and master your strategy with Pro!",
+      );
+      setUpgradeOpen(true);
+      return;
+    }
+    if (!isPremium) setHintsUsed((n) => n + 1);
+    setHintToken((t) => t + 1);
+  }, [isPremium, hintsUsed]);
+
+  const handleHintComputed = useCallback((move: Move | null) => {
+    if (!move) {
+      setHintSuggestion(null);
+      return;
+    }
+    const from = squareName(move.from.r, move.from.c);
+    const to = squareName(move.to.r, move.to.c);
+    const verb = move.captures.length > 0
+      ? `capture toward ${to}`
+      : `advance to ${to}`;
+    setHintSuggestion(
+      `Coach suggests: ${verb} from ${from} — strongest line on the board right now.`,
+    );
+  }, []);
+
   // Detect ?room= in URL on mount (client-only). Host marker is in sessionStorage.
   useEffect(() => {
     if (typeof window === "undefined") return;
