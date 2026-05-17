@@ -67,12 +67,19 @@ function formatClock(ms: number): string {
  * - Battle AI: P1 (player) vs P2 (AI). Difficulty configurable.
  * Rule enforcement (forced capture, multi-jump, kings) lives in lib/checkers.
  */
-export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
+export function CheckersBoard({
+  onGameEnd,
+  onTurnChange,
+  onNewGame,
+  hintToken,
+  onHintComputed,
+}: Props) {
   const [board, setBoard] = useState<Board>(initialBoard);
   const [turn, setTurn] = useState<Player>("p1");
   const [selected, setSelected] = useState<Pos | null>(null);
   const [moveCount, setMoveCount] = useState(0);
   const [winner, setWinner] = useState<Player | "draw" | null>(null);
+  const [hint, setHint] = useState<Move | null>(null);
 
   const [mode, setMode] = useState<Mode>("ai");
   const [difficulty, setDifficulty] = useState<Difficulty>("cyber");
