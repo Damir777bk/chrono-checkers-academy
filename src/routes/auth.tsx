@@ -23,7 +23,7 @@ const CITIES = ["Almaty", "Astana", "Karaganda"] as const;
 function AuthPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [mode, setMode] = useState<"signin" | "signup">("signup");
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
