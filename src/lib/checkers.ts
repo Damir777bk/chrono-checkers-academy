@@ -186,6 +186,28 @@ export function pickAIMove(board: Board, difficulty: Difficulty): Move | null {
   return best;
 }
 
+/** Return the strongest move for the given player using minimax depth 3.
+ *  Used by the in-game "Coach Hint" feature. */
+export function pickBestMoveFor(board: Board, player: Player): Move | null {
+  const moves = getAllMoves(board, player);
+  if (!moves.length) return null;
+  // evaluate() is positive when p2 is winning. Flip sign for p1.
+  const sign = player === "p2" ? 1 : -1;
+  // After our move, it's the opponent's turn. maximizing=true means p2-to-move.
+  const opponentMaximizing = player === "p1";
+  let best = moves[0];
+  let bestScore = -Infinity;
+  for (const m of moves) {
+    const raw = minimax(applyMove(board, m), 3, -Infinity, Infinity, opponentMaximizing);
+    const score = sign * raw;
+    if (score > bestScore) {
+      bestScore = score;
+      best = m;
+    }
+  }
+  return best;
+}
+
 function minimax(board: Board, depth: number, alpha: number, beta: number, maximizing: boolean): number {
   if (depth === 0) return evaluate(board);
   const player: Player = maximizing ? "p2" : "p1";
