@@ -222,9 +222,9 @@ export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
     return () => clearInterval(id);
   }, [turn, winner, aiThinking, timed, timeControl]);
 
-  // Detect timeout loss.
+  // Detect timeout loss (skipped in Zen mode).
   useEffect(() => {
-    if (winner) return;
+    if (!timed || winner) return;
     if (timeP1 <= 0) {
       setTimeoutLoss("p1");
       setWinner("p2");
@@ -242,13 +242,13 @@ export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
         finalizeEvents("p1", moveCount),
       );
     }
-  }, [timeP1, timeP2, winner, mode, difficulty, onGameEnd, moveCount, finalizeEvents]);
+  }, [timeP1, timeP2, winner, mode, difficulty, onGameEnd, moveCount, finalizeEvents, timed]);
 
-  // Reset the board when the user switches mode or difficulty mid-game.
+  // Reset the board when the user switches mode, difficulty, or time control mid-game.
   useEffect(() => {
     reset();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, difficulty]);
+  }, [mode, difficulty, timeControl]);
 
   const isTarget = (r: number, c: number) =>
     legalForSelected.some((m) => m.to.r === r && m.to.c === c);
