@@ -199,11 +199,11 @@ export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
     eventsRef.current = emptyEvents();
     prevP1KingsRef.current = 0;
     onNewGame?.();
-  }, [onNewGame]);
+  }, [onNewGame, initialClockMs]);
 
-  // Blitz timer: tick the active player's clock unless the game is over or AI is thinking.
+  // Clock timer: tick the active player's clock unless game over / AI thinking / Zen mode.
   useEffect(() => {
-    if (winner || aiThinking) return;
+    if (!timed || winner || aiThinking) return;
     let last = Date.now();
     const id = setInterval(() => {
       const now = Date.now();
