@@ -10,6 +10,7 @@ export interface Profile {
   rating: number;
   wins: number;
   losses: number;
+  is_premium: boolean;
 }
 
 interface AuthCtx {
