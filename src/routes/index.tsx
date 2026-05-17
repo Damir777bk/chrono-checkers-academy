@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { TopNav } from "@/components/TopNav";
 import { Leaderboard } from "@/components/Leaderboard";
 import { AICoach } from "@/components/AICoach";
 import { CheckersBoard } from "@/components/CheckersBoard";
+import { OnlineCheckersBoard } from "@/components/OnlineCheckersBoard";
+import { InviteModal } from "@/components/InviteModal";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { Toaster } from "@/components/ui/sonner";
 import type { Player } from "@/lib/checkers";
@@ -33,6 +35,9 @@ export const Route = createFileRoute("/")({
 
 type Outcome = "win" | "loss" | "draw";
 
+/** Multiplayer session info derived from URL + sessionStorage host marker. */
+type RoomInfo = { id: string; role: Player };
+
 function Index() {
   const { user, profile, refreshProfile } = useAuth();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
@@ -42,20 +47,64 @@ function Index() {
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [gameKey, setGameKey] = useState(0);
 
+  // Multiplayer state
+  const [room, setRoom] = useState<RoomInfo | null>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [opponentJoined, setOpponentJoined] = useState(false);
+  const [inviteUrl, setInviteUrl] = useState("");
+
+  // Detect ?room= in URL on mount (client-only). Host marker is in sessionStorage.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const rid = params.get("room");
+    if (!rid) return;
+    const isHost = sessionStorage.getItem(`cc:host:${rid}`) === "1";
+    setRoom({ id: rid, role: isHost ? "p1" : "p2" });
+    setInviteUrl(`${window.location.origin}${window.location.pathname}?room=${rid}`);
+    if (isHost) setInviteOpen(true);
+  }, []);
+
+  const handleInvite = useCallback(() => {
+    if (typeof window === "undefined") return;
+    const rid = (crypto.randomUUID?.() ?? Math.random().toString(36).slice(2)).slice(0, 12);
+    sessionStorage.setItem(`cc:host:${rid}`, "1");
+    const url = `${window.location.origin}${window.location.pathname}?room=${rid}`;
+    window.history.replaceState(null, "", `?room=${rid}`);
+    setInviteUrl(url);
+    setRoom({ id: rid, role: "p1" });
+    setOpponentJoined(false);
+    setInviteOpen(true);
+  }, []);
+
+  const leaveRoom = useCallback(() => {
+    if (typeof window === "undefined") return;
+    if (room) sessionStorage.removeItem(`cc:host:${room.id}`);
+    window.history.replaceState(null, "", window.location.pathname);
+    setRoom(null);
+    setInviteOpen(false);
+    setOpponentJoined(false);
+  }, [room]);
+
   const handleTurn = useCallback((p: Player, n: number) => {
     setTurn(p);
     setMoveNumber(n);
   }, []);
 
   const handleEnd = useCallback(
-    async (winner: Player | "draw", meta: { mode: "local" | "ai"; difficulty?: string }) => {
+    async (
+      winner: Player | "draw",
+      meta: { mode: "local" | "ai" | "online"; difficulty?: string }
+    ) => {
       setGameOver(true);
-      const result: Outcome = winner === "draw" ? "draw" : winner === "p1" ? "win" : "loss";
+      // For online matches, the local player's color determines win/loss.
+      const myColor: Player = meta.mode === "online" && room ? room.role : "p1";
+      const result: Outcome =
+        winner === "draw" ? "draw" : winner === myColor ? "win" : "loss";
       setOutcome(result);
 
       if (!user || !profile) return;
 
-      // Cyber-rating change
       const delta = result === "win" ? 18 : result === "loss" ? -12 : 2;
       const newRating = Math.max(0, profile.rating + delta);
       const newWins = profile.wins + (result === "win" ? 1 : 0);
@@ -64,7 +113,7 @@ function Index() {
       const [{ error: gErr }, { error: pErr }] = await Promise.all([
         supabase.from("games").insert({
           user_id: user.id,
-          opponent_type: meta.mode === "ai" ? "ai" : "local",
+          opponent_type: meta.mode,
           difficulty: meta.difficulty ?? null,
           result,
           moves: moveNumber,
@@ -89,13 +138,19 @@ function Index() {
           : `Defeat · ${delta} cyber-rating`
       );
     },
-    [user, profile, moveNumber, refreshProfile]
+    [user, profile, moveNumber, refreshProfile, room]
   );
 
   const handleNewGame = useCallback(() => {
     setGameOver(false);
     setOutcome(null);
     setGameKey((k) => k + 1);
+  }, []);
+
+  const handleOpponentJoined = useCallback(() => {
+    setOpponentJoined(true);
+    setInviteOpen(false);
+    toast.success("Opponent joined — table is live");
   }, []);
 
   return (
@@ -117,17 +172,56 @@ function Index() {
               Sign in to track ratings and climb the national leaderboard
             </p>
           )}
+
+          {/* Multiplayer controls */}
+          <div className="flex items-center justify-center gap-3 mt-6">
+            {!room ? (
+              <button
+                onClick={handleInvite}
+                className="px-5 py-2.5 text-[10px] uppercase tracking-[0.3em] bg-primary text-primary-foreground rounded-sm shadow-luxe hover:opacity-90 transition-opacity"
+              >
+                Invite a Friend
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={() => setInviteOpen(true)}
+                  className="px-4 py-2 text-[10px] uppercase tracking-[0.3em] border border-[var(--gold)]/50 text-[var(--gold)] rounded-sm hover:bg-[var(--gold)]/10 transition-colors"
+                >
+                  Show Invite Link
+                </button>
+                <button
+                  onClick={leaveRoom}
+                  className="px-4 py-2 text-[10px] uppercase tracking-[0.3em] text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Leave Room
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr_320px] gap-8 items-start">
           <Leaderboard />
 
           <div className="flex justify-center">
-            <CheckersBoard
-              onGameEnd={handleEnd}
-              onTurnChange={handleTurn}
-              onNewGame={handleNewGame}
-            />
+            {room ? (
+              <OnlineCheckersBoard
+                key={`${room.id}-${gameKey}`}
+                roomId={room.id}
+                localPlayer={room.role}
+                onGameEnd={handleEnd}
+                onTurnChange={handleTurn}
+                onNewGame={handleNewGame}
+                onOpponentJoined={handleOpponentJoined}
+              />
+            ) : (
+              <CheckersBoard
+                onGameEnd={handleEnd}
+                onTurnChange={handleTurn}
+                onNewGame={handleNewGame}
+              />
+            )}
           </div>
 
           <AICoach
@@ -146,6 +240,12 @@ function Index() {
         </footer>
       </main>
 
+      <InviteModal
+        open={inviteOpen}
+        url={inviteUrl}
+        waiting={!opponentJoined}
+        onClose={() => setInviteOpen(false)}
+      />
       <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} />
       <Toaster />
     </div>
