@@ -316,6 +316,27 @@ export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
           </div>
         )}
 
+        <div className="relative">
+          <select
+            value={timeControl}
+            onChange={(e) => setTimeControl(e.target.value as TimeControl)}
+            aria-label="Time control"
+            className={cn(
+              "appearance-none pl-4 pr-9 py-2 text-[10px] uppercase tracking-[0.25em]",
+              "bg-card border border-border rounded-sm shadow-luxe",
+              "text-foreground cursor-pointer transition-colors",
+              "hover:border-[var(--gold)]/60 focus:outline-none focus:border-[var(--gold)]"
+            )}
+          >
+            <option value="zen">{TIME_CONTROL_LABEL.zen}</option>
+            <option value="blitz">{TIME_CONTROL_LABEL.blitz}</option>
+            <option value="rapid">{TIME_CONTROL_LABEL.rapid}</option>
+          </select>
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--gold)] text-xs">
+            ▾
+          </span>
+        </div>
+
         <div className="sm:ml-auto">
           <button
             onClick={reset}
