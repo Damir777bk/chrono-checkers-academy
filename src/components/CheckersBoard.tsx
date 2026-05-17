@@ -18,8 +18,9 @@ const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 type Mode = "local" | "ai";
 
 interface Props {
-  onGameEnd?: (winner: Player | "draw") => void;
+  onGameEnd?: (winner: Player | "draw", meta: { mode: "local" | "ai"; difficulty?: string }) => void;
   onTurnChange?: (player: Player, moveNum: number) => void;
+  onNewGame?: () => void;
 }
 
 const DIFFICULTY_LABEL: Record<Difficulty, string> = {
@@ -34,7 +35,7 @@ const DIFFICULTY_LABEL: Record<Difficulty, string> = {
  * - Battle AI: P1 (player) vs P2 (AI). Difficulty configurable.
  * Rule enforcement (forced capture, multi-jump, kings) lives in lib/checkers.
  */
-export function CheckersBoard({ onGameEnd, onTurnChange }: Props) {
+export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
   const [board, setBoard] = useState<Board>(initialBoard);
   const [turn, setTurn] = useState<Player>("p1");
   const [selected, setSelected] = useState<Pos | null>(null);
@@ -57,9 +58,9 @@ export function CheckersBoard({ onGameEnd, onTurnChange }: Props) {
     if (!getAllMoves(board, turn).length) {
       const w: Player = turn === "p1" ? "p2" : "p1";
       setWinner(w);
-      onGameEnd?.(w);
+      onGameEnd?.(w, { mode, difficulty: mode === "ai" ? difficulty : undefined });
     }
-  }, [turn, board, winner, moveCount, onGameEnd, onTurnChange]);
+  }, [turn, board, winner, moveCount, onGameEnd, onTurnChange, mode, difficulty]);
 
   // AI driver: when it's p2's turn in AI mode, think for ~1s then play.
   useEffect(() => {
@@ -114,7 +115,8 @@ export function CheckersBoard({ onGameEnd, onTurnChange }: Props) {
     setMoveCount(0);
     setWinner(null);
     setAiThinking(false);
-  }, []);
+    onNewGame?.();
+  }, [onNewGame]);
 
   // Reset the board when the user switches mode or difficulty mid-game.
   useEffect(() => {
