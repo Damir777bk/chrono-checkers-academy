@@ -272,8 +272,49 @@ export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
         </div>
       </div>
 
+      {/* Blitz dual timer */}
+      <div className="flex items-stretch justify-between gap-3 w-full max-w-[640px]">
+        {(["p1", "p2"] as const).map((p) => {
+          const ms = p === "p1" ? timeP1 : timeP2;
+          const isActive = !winner && turn === p && !aiThinking;
+          const low = ms <= 30000;
+          const label =
+            p === "p1" ? "White" : mode === "ai" ? DIFFICULTY_LABEL[difficulty] : "Charcoal";
+          return (
+            <div
+              key={p}
+              className={cn(
+                "flex-1 flex items-center justify-between px-5 py-3 rounded-sm border bg-card transition-all",
+                isActive
+                  ? "border-[var(--gold)]/70 shadow-luxe"
+                  : "border-border/60 opacity-60"
+              )}
+            >
+              <div className="flex flex-col">
+                <span className="text-[9px] uppercase tracking-[0.3em] text-muted-foreground">
+                  {p === "p1" ? "Player 1" : mode === "ai" ? "AI Opponent" : "Player 2"}
+                </span>
+                <span className="text-[10px] uppercase tracking-[0.25em] text-foreground/80">
+                  {label}
+                </span>
+              </div>
+              <span
+                className={cn(
+                  "font-mono tabular-nums text-3xl tracking-[0.15em] transition-colors",
+                  low ? "text-destructive" : isActive ? "text-[var(--gold)]" : "text-foreground/70",
+                  isActive && "animate-pulse"
+                )}
+              >
+                {formatClock(ms)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
       <div className="relative p-5 rounded-sm bg-gradient-to-b from-[oklch(0.22_0.012_250)] to-[oklch(0.14_0.01_250)] shadow-luxe">
         <div className="absolute inset-3 rounded-sm pointer-events-none ring-1 ring-[var(--gold)]/40" />
+
 
         <div
           className={cn(
