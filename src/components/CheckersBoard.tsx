@@ -536,11 +536,6 @@ export function CheckersBoard({
         </div>
       </div>
 
-      <div className="flex items-center gap-6 text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-        <span>{mode === "ai" ? DIFFICULTY_LABEL[difficulty] : "Hot-Seat"}</span>
-        <span className="w-px h-3 bg-border" />
-        <span>Forced Capture · Multi-Jump</span>
-      </div>
 
       {/* Timeout modal */}
       {timeoutLoss && (
