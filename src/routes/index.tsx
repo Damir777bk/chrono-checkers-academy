@@ -124,7 +124,6 @@ function Index() {
 
           <div className="flex justify-center">
             <CheckersBoard
-              key={gameKey}
               onGameEnd={handleEnd}
               onTurnChange={handleTurn}
               onNewGame={handleNewGame}
