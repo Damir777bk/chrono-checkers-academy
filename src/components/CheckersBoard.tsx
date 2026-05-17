@@ -56,6 +56,11 @@ export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
   const [difficulty, setDifficulty] = useState<Difficulty>("cyber");
   const [aiThinking, setAiThinking] = useState(false);
 
+  // Blitz clocks (chess-style). Each player has 3:00 total.
+  const [timeP1, setTimeP1] = useState(INITIAL_TIME_MS);
+  const [timeP2, setTimeP2] = useState(INITIAL_TIME_MS);
+  const [timeoutLoss, setTimeoutLoss] = useState<Player | null>(null);
+
   const legalForSelected = useMemo<Move[]>(
     () => (selected ? getMovesFrom(board, turn, selected) : []),
     [board, turn, selected]
