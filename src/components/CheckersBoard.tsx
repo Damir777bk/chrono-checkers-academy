@@ -35,7 +35,18 @@ const DIFFICULTY_LABEL: Record<Difficulty, string> = {
   grandmaster: "Grandmaster AI",
 };
 
-const INITIAL_TIME_MS = 3 * 60 * 1000;
+type TimeControl = "zen" | "blitz" | "rapid";
+
+const TIME_CONTROL_MS: Record<TimeControl, number> = {
+  zen: 0,
+  blitz: 3 * 60 * 1000,
+  rapid: 10 * 60 * 1000,
+};
+const TIME_CONTROL_LABEL: Record<TimeControl, string> = {
+  zen: "Zen Mode",
+  blitz: "Blitz · 3 min",
+  rapid: "Rapid · 10 min",
+};
 
 function formatClock(ms: number): string {
   const safe = Math.max(0, ms);
