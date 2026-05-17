@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Lightbulb, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { emptyEvents, type MatchEvents } from "@/lib/checkers";
 
@@ -12,6 +13,13 @@ interface Props {
   resetKey: number;
   /** Telemetry collected during the match. */
   events?: MatchEvents;
+  /** Live-hint controls (optional — when omitted the panel hides them). */
+  isPremium?: boolean;
+  hintsUsed?: number;
+  maxHints?: number;
+  canRequestHint?: boolean;
+  hintSuggestion?: string | null;
+  onRequestHint?: () => void;
 }
 
 const SCAN_LINES = [
