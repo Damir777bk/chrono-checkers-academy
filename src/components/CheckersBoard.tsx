@@ -509,7 +509,8 @@ export function CheckersBoard({
                       className={cn(
                         "relative w-[78%] h-[78%] rounded-full animate-piece-place shadow-piece",
                         piece.player === "p1" ? "marble-ivory" : "marble-charcoal",
-                        sel && "animate-select-pulse"
+                        sel && "animate-select-pulse",
+                        hintFrom && "ring-4 ring-[var(--gold)] shadow-[0_0_24px_6px_var(--gold)] animate-hint-pulse"
                       )}
                     >
                       <span className="absolute inset-0 rounded-full ring-[1.5px] ring-[var(--gold)]/80" />
