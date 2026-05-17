@@ -29,6 +29,16 @@ const DIFFICULTY_LABEL: Record<Difficulty, string> = {
   grandmaster: "Grandmaster AI",
 };
 
+const INITIAL_TIME_MS = 3 * 60 * 1000;
+
+function formatClock(ms: number): string {
+  const safe = Math.max(0, ms);
+  const totalSeconds = Math.ceil(safe / 1000);
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+}
+
 /**
  * Hot-seat / vs-AI checkers board.
  * - Local 2-Player: P1 and P2 alternate clicking.
