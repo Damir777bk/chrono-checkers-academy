@@ -163,9 +163,18 @@ export function CheckersBoard({
 
   const humanCanClick = !winner && !aiThinking && (mode === "local" || turn === "p1");
 
+  const clearHint = useCallback(() => {
+    setHint((prev) => {
+      if (prev) onHintComputed?.(null);
+      return null;
+    });
+  }, [onHintComputed]);
+
   const handleSquareClick = useCallback(
     (r: number, c: number) => {
       if (!humanCanClick) return;
+      // Any user interaction clears an active hint highlight.
+      clearHint();
       const piece = board[r][c];
 
       if (selected) {
@@ -195,8 +204,20 @@ export function CheckersBoard({
         setSelected(null);
       }
     },
-    [board, humanCanClick, legalForSelected, selected, turn]
+    [board, humanCanClick, legalForSelected, selected, turn, clearHint]
   );
+
+  // Compute a coach hint whenever the parent bumps hintToken.
+  const lastHintTokenRef = useRef<number | undefined>(hintToken);
+  useEffect(() => {
+    if (hintToken === undefined) return;
+    if (hintToken === lastHintTokenRef.current) return;
+    lastHintTokenRef.current = hintToken;
+    if (winner || aiThinking) return;
+    const move = pickBestMoveFor(board, turn);
+    setHint(move);
+    onHintComputed?.(move);
+  }, [hintToken, board, turn, winner, aiThinking, onHintComputed]);
 
   const reset = useCallback(() => {
     setBoard(initialBoard());
