@@ -86,7 +86,7 @@ export function CheckersBoard({
   const [aiThinking, setAiThinking] = useState(false);
 
   // Time control: Zen (no clock), Blitz (3 min), Rapid (10 min).
-  const [timeControl, setTimeControl] = useState<TimeControl>("blitz");
+  const [timeControl, setTimeControl] = useState<TimeControl>("zen");
   const timed = timeControl !== "zen";
   const initialClockMs = TIME_CONTROL_MS[timeControl];
   const [timeP1, setTimeP1] = useState<number>(initialClockMs);
