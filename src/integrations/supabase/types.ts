@@ -52,6 +52,7 @@ export type Database = {
           city: Database["public"]["Enums"]["city"]
           created_at: string
           id: string
+          is_premium: boolean
           losses: number
           rating: number
           username: string
@@ -61,6 +62,7 @@ export type Database = {
           city: Database["public"]["Enums"]["city"]
           created_at?: string
           id: string
+          is_premium?: boolean
           losses?: number
           rating?: number
           username: string
@@ -70,6 +72,7 @@ export type Database = {
           city?: Database["public"]["Enums"]["city"]
           created_at?: string
           id?: string
+          is_premium?: boolean
           losses?: number
           rating?: number
           username?: string
