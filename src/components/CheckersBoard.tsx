@@ -400,6 +400,44 @@ export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
         <span className="w-px h-3 bg-border" />
         <span>Forced Capture · Multi-Jump</span>
       </div>
+
+      {/* Timeout modal */}
+      {timeoutLoss && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm animate-fade-in">
+          <div className="relative max-w-md w-[90%] rounded-sm border border-[var(--gold)]/50 bg-card p-8 shadow-luxe animate-scale-in">
+            <div className="absolute inset-2 rounded-sm pointer-events-none ring-1 ring-[var(--gold)]/30" />
+            <div className="flex flex-col items-center text-center gap-4">
+              <span className="text-[10px] uppercase tracking-[0.4em] text-[var(--gold)]">
+                Blitz · Time Expired
+              </span>
+              <h2 className="font-serif text-3xl tracking-tight text-foreground">
+                {timeoutLoss === "p1" ? "Defeat by Timeout" : "Victory by Timeout"}
+              </h2>
+              <p className="text-sm text-muted-foreground max-w-sm">
+                {timeoutLoss === "p1"
+                  ? "Your clock reached 00:00. In Blitz, tempo is everything."
+                  : `${mode === "ai" ? DIFFICULTY_LABEL[difficulty] : "Charcoal"}'s clock reached 00:00. Tempo prevails.`}
+              </p>
+              <div className="flex items-center gap-6 mt-2 font-mono tabular-nums text-sm">
+                <span className="text-muted-foreground">
+                  White <span className={cn("ml-2", timeoutLoss === "p1" ? "text-destructive" : "text-foreground")}>{formatClock(timeP1)}</span>
+                </span>
+                <span className="w-px h-4 bg-border" />
+                <span className="text-muted-foreground">
+                  Charcoal <span className={cn("ml-2", timeoutLoss === "p2" ? "text-destructive" : "text-foreground")}>{formatClock(timeP2)}</span>
+                </span>
+              </div>
+              <button
+                onClick={reset}
+                className="mt-4 px-6 py-2.5 text-[10px] uppercase tracking-[0.3em] bg-primary text-primary-foreground rounded-sm shadow-luxe hover:opacity-90 transition-opacity"
+              >
+                New Game
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
