@@ -43,6 +43,31 @@ type RoomInfo = { id: string; role: Player };
 function Index() {
   const { user, profile, refreshProfile } = useAuth();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeReason, setUpgradeReason] = useState<string | undefined>(undefined);
+  const [theme, setTheme] = useState<ThemeId>("classic");
+  const isPremium = profile?.is_premium === true;
+  const themeClass = THEMES.find((t) => t.id === theme)?.className ?? "";
+
+  const handleThemeSelect = useCallback(
+    (id: ThemeId) => {
+      const t = THEMES.find((x) => x.id === id);
+      if (!t) return;
+      if (t.premium && !isPremium) {
+        setUpgradeReason(
+          "Unlock custom premium themes and unlimited AI Coaching for just $9/mo.",
+        );
+        setUpgradeOpen(true);
+        return;
+      }
+      setTheme(id);
+    },
+    [isPremium],
+  );
+
+  const openGenericUpgrade = useCallback(() => {
+    setUpgradeReason(undefined);
+    setUpgradeOpen(true);
+  }, []);
   const [turn, setTurn] = useState<Player>("p1");
   const [moveNumber, setMoveNumber] = useState(0);
   const [gameOver, setGameOver] = useState(false);
