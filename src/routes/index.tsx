@@ -95,7 +95,8 @@ function Index() {
   const handleEnd = useCallback(
     async (
       winner: Player | "draw",
-      meta: { mode: "local" | "ai" | "online"; difficulty?: string }
+      meta: { mode: "local" | "ai" | "online"; difficulty?: string },
+      events?: MatchEvents,
     ) => {
       setGameOver(true);
       // For online matches, the local player's color determines win/loss.
@@ -103,6 +104,7 @@ function Index() {
       const result: Outcome =
         winner === "draw" ? "draw" : winner === myColor ? "win" : "loss";
       setOutcome(result);
+      setMatchEvents(events ?? { ...emptyEvents(), totalMoves: moveNumber });
 
       if (!user || !profile) return;
 
