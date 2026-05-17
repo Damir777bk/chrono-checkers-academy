@@ -139,20 +139,16 @@ export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
   // Blitz timer: tick the active player's clock unless the game is over or AI is thinking.
   useEffect(() => {
     if (winner || aiThinking) return;
-    const start = Date.now();
+    let last = Date.now();
     const id = setInterval(() => {
       const now = Date.now();
-      const delta = now - start;
+      const delta = now - last;
+      last = now;
       if (turn === "p1") {
-        setTimeP1((prev) => {
-          const next = Math.max(0, INITIAL_TIME_MS - (INITIAL_TIME_MS - prev) - 0);
-          // recompute using start snapshot for accuracy
-          return Math.max(0, prev - 100);
-        });
+        setTimeP1((prev) => Math.max(0, prev - delta));
       } else {
-        setTimeP2((prev) => Math.max(0, prev - 100));
+        setTimeP2((prev) => Math.max(0, prev - delta));
       }
-      void delta;
     }, 100);
     return () => clearInterval(id);
   }, [turn, winner, aiThinking]);
