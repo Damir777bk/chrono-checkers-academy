@@ -207,6 +207,48 @@
   }
   .animate-hint-pulse { animation: hint-pulse 1.4s ease-in-out infinite; }
 
+  /* AI Coach scanning overlay */
+  @keyframes matrix-fall {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
+  }
+  .matrix-rain {
+    background-image:
+      repeating-linear-gradient(
+        90deg,
+        transparent 0px,
+        transparent 14px,
+        oklch(0.74 0.11 82 / 0.18) 14px,
+        oklch(0.74 0.11 82 / 0.18) 15px
+      ),
+      repeating-linear-gradient(
+        0deg,
+        transparent 0px,
+        transparent 18px,
+        oklch(0.86 0.09 85 / 0.1) 18px,
+        oklch(0.86 0.09 85 / 0.1) 19px
+      );
+    animation: matrix-fall 2.4s linear infinite;
+  }
+  @keyframes scan-sweep {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
+  }
+  .scan-lines::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      oklch(0.74 0.11 82 / 0.18) 48%,
+      oklch(0.86 0.09 85 / 0.35) 50%,
+      oklch(0.74 0.11 82 / 0.18) 52%,
+      transparent 100%
+    );
+    animation: scan-sweep 1.8s ease-in-out infinite;
+  }
+
   @keyframes king-glow {
     0%, 100% { filter: drop-shadow(0 0 4px oklch(0.74 0.11 82 / 0.7)); }
     50%      { filter: drop-shadow(0 0 10px oklch(0.86 0.11 85 / 0.95)); }
