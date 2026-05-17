@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
@@ -22,7 +23,7 @@ const CITIES = ["Almaty", "Astana", "Karaganda"] as const;
 function AuthPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [mode, setMode] = useState<"signin" | "signup">("signup");
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
@@ -72,26 +73,47 @@ function AuthPage() {
         </Link>
 
         <div className="bg-card border border-border rounded-sm shadow-luxe p-8">
-          <div className="flex border-b border-border mb-6">
-            {(["signup", "signin"] as const).map((m) => (
-              <button
-                key={m}
-                onClick={() => { setMode(m); setError(null); }}
-                className={cn(
-                  "flex-1 pb-3 text-[10px] uppercase tracking-[0.3em] transition-colors",
-                  mode === m
-                    ? "text-foreground border-b-2 border-[var(--gold)] -mb-px"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
+          <Tabs
+            value={mode}
+            onValueChange={(v) => { setMode(v as "signin" | "signup"); setError(null); }}
+            className="w-full"
+          >
+            <TabsList className="grid w-full grid-cols-2 h-11 bg-muted/40 border border-border rounded-sm p-1 mb-6">
+              <TabsTrigger
+                value="signin"
+                className="rounded-sm text-[10px] uppercase tracking-[0.3em] data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-[var(--gold)]/40 transition-all"
               >
-                {m === "signup" ? "Create Account" : "Sign In"}
-              </button>
-            ))}
-          </div>
+                Sign In
+              </TabsTrigger>
+              <TabsTrigger
+                value="signup"
+                className="rounded-sm text-[10px] uppercase tracking-[0.3em] data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-[var(--gold)]/40 transition-all"
+              >
+                Sign Up
+              </TabsTrigger>
+            </TabsList>
 
-          <form onSubmit={submit} className="space-y-4">
-            {mode === "signup" && (
-              <>
+            <form onSubmit={submit} className="space-y-4 animate-in fade-in duration-200">
+              <TabsContent value="signin" className="space-y-4 mt-0">
+                <Field label="Email">
+                  <input
+                    type="email" required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={inputCls}
+                  />
+                </Field>
+                <Field label="Password">
+                  <input
+                    type="password" required minLength={6}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={inputCls}
+                  />
+                </Field>
+              </TabsContent>
+
+              <TabsContent value="signup" className="space-y-4 mt-0">
                 <Field label="Display Name">
                   <input
                     value={username}
@@ -100,7 +122,23 @@ function AuthPage() {
                     className={inputCls}
                   />
                 </Field>
-                <Field label="City">
+                <Field label="Email">
+                  <input
+                    type="email" required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={inputCls}
+                  />
+                </Field>
+                <Field label="Password">
+                  <input
+                    type="password" required minLength={6}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={inputCls}
+                  />
+                </Field>
+                <Field label="Select City">
                   <div className="relative">
                     <select
                       value={city}
@@ -112,39 +150,23 @@ function AuthPage() {
                     <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--gold)] text-xs">▾</span>
                   </div>
                 </Field>
-              </>
-            )}
-            <Field label="Email">
-              <input
-                type="email" required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={inputCls}
-              />
-            </Field>
-            <Field label="Password">
-              <input
-                type="password" required minLength={6}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={inputCls}
-              />
-            </Field>
+              </TabsContent>
 
-            {error && (
-              <div className="text-xs text-destructive border-l-2 border-destructive pl-3 py-1">
-                {error}
-              </div>
-            )}
+              {error && (
+                <div className="text-xs text-destructive border-l-2 border-destructive pl-3 py-1">
+                  {error}
+                </div>
+              )}
 
-            <button
-              type="submit"
-              disabled={busy}
-              className="w-full py-3 px-4 rounded-sm text-[11px] uppercase tracking-[0.25em] font-medium bg-primary text-primary-foreground border border-[var(--gold)]/40 hover:bg-[var(--emerald-forest)] hover:border-[var(--gold)] transition-all disabled:opacity-60"
-            >
-              {busy ? "Please wait…" : mode === "signup" ? "Join the Academy" : "Enter"}
-            </button>
-          </form>
+              <button
+                type="submit"
+                disabled={busy}
+                className="w-full py-3 px-4 rounded-sm text-[11px] uppercase tracking-[0.25em] font-medium bg-primary text-primary-foreground border border-[var(--gold)]/40 hover:bg-[var(--emerald-forest)] hover:border-[var(--gold)] transition-all disabled:opacity-60"
+              >
+                {busy ? "Please wait…" : mode === "signup" ? "Create Account" : "Sign In"}
+              </button>
+            </form>
+          </Tabs>
 
           <Link to="/" className="block text-center mt-6 text-[10px] uppercase tracking-[0.3em] text-muted-foreground hover:text-foreground">
             ← Back to board
