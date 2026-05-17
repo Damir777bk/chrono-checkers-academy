@@ -235,24 +235,31 @@ function Index() {
         <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr_320px] gap-8 items-start">
           <Leaderboard />
 
-          <div className="flex justify-center">
-            {room ? (
-              <OnlineCheckersBoard
-                key={`${room.id}-${gameKey}`}
-                roomId={room.id}
-                localPlayer={room.role}
-                onGameEnd={handleEnd}
-                onTurnChange={handleTurn}
-                onNewGame={handleNewGame}
-                onOpponentJoined={handleOpponentJoined}
-              />
-            ) : (
-              <CheckersBoard
-                onGameEnd={handleEnd}
-                onTurnChange={handleTurn}
-                onNewGame={handleNewGame}
-              />
-            )}
+          <div className="flex flex-col items-center">
+            <ThemeSelector
+              current={theme}
+              isPremium={isPremium}
+              onSelect={handleThemeSelect}
+            />
+            <div className={themeClass}>
+              {room ? (
+                <OnlineCheckersBoard
+                  key={`${room.id}-${gameKey}`}
+                  roomId={room.id}
+                  localPlayer={room.role}
+                  onGameEnd={handleEnd}
+                  onTurnChange={handleTurn}
+                  onNewGame={handleNewGame}
+                  onOpponentJoined={handleOpponentJoined}
+                />
+              ) : (
+                <CheckersBoard
+                  onGameEnd={handleEnd}
+                  onTurnChange={handleTurn}
+                  onNewGame={handleNewGame}
+                />
+              )}
+            </div>
           </div>
 
           <AICoach
