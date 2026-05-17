@@ -285,7 +285,11 @@ function Index() {
         waiting={!opponentJoined}
         onClose={() => setInviteOpen(false)}
       />
-      <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} />
+      <UpgradeModal
+        open={upgradeOpen}
+        reason={upgradeReason}
+        onClose={() => setUpgradeOpen(false)}
+      />
       <Toaster />
     </div>
   );
