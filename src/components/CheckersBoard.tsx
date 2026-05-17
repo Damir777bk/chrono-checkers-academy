@@ -366,7 +366,8 @@ export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
         </div>
       </div>
 
-      {/* Blitz dual timer */}
+      {/* Dual game clock (hidden in Zen mode) */}
+      {timed && (
       <div className="flex items-stretch justify-between gap-3 w-full max-w-[640px]">
         {(["p1", "p2"] as const).map((p) => {
           const ms = p === "p1" ? timeP1 : timeP2;
