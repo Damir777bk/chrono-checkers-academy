@@ -172,6 +172,55 @@
       linear-gradient(140deg, oklch(0.28 0.06 160), oklch(0.2 0.05 160));
   }
 
+  /* THEME: Midnight Cyber — dark slate with neon cyan dark cells */
+  .theme-cyber .square-light {
+    background:
+      radial-gradient(circle at 30% 25%, oklch(0.32 0.02 250 / 0.9), transparent 70%),
+      linear-gradient(140deg, oklch(0.26 0.02 250), oklch(0.2 0.018 250));
+  }
+  .theme-cyber .square-dark {
+    background:
+      radial-gradient(circle at 30% 25%, oklch(0.62 0.16 200 / 0.95), transparent 70%),
+      linear-gradient(140deg, oklch(0.42 0.14 210), oklch(0.22 0.09 220));
+    box-shadow: inset 0 0 12px oklch(0.7 0.18 200 / 0.35);
+  }
+  .theme-cyber .marble-ivory {
+    background:
+      radial-gradient(circle at 30% 30%, oklch(0.95 0.04 200 / 0.95), transparent 55%),
+      linear-gradient(145deg, oklch(0.82 0.08 200), oklch(0.55 0.14 210));
+  }
+  .theme-cyber .marble-charcoal {
+    background:
+      radial-gradient(circle at 32% 30%, oklch(0.35 0.1 290 / 0.95), transparent 55%),
+      linear-gradient(145deg, oklch(0.2 0.05 270), oklch(0.1 0.03 270));
+  }
+
+  /* THEME: Royal Marble — polished onyx & carrara */
+  .theme-marble .square-light {
+    background:
+      radial-gradient(circle at 25% 20%, oklch(1 0 0 / 0.95), transparent 60%),
+      radial-gradient(circle at 75% 80%, oklch(0.86 0.01 85 / 0.6), transparent 65%),
+      linear-gradient(140deg, oklch(0.96 0.008 85), oklch(0.88 0.012 85));
+  }
+  .theme-marble .square-dark {
+    background:
+      radial-gradient(circle at 30% 25%, oklch(0.32 0.012 280 / 0.95), transparent 60%),
+      radial-gradient(circle at 70% 70%, oklch(0.18 0.01 280 / 0.9), transparent 65%),
+      linear-gradient(140deg, oklch(0.24 0.012 280), oklch(0.14 0.01 280));
+  }
+  .theme-marble .marble-ivory {
+    background:
+      radial-gradient(circle at 30% 30%, oklch(1 0 0 / 0.95), transparent 55%),
+      radial-gradient(circle at 70% 75%, oklch(0.85 0.01 85 / 0.7), transparent 60%),
+      linear-gradient(145deg, oklch(0.98 0.008 85), oklch(0.88 0.012 85));
+  }
+  .theme-marble .marble-charcoal {
+    background:
+      radial-gradient(circle at 30% 30%, oklch(0.42 0.015 280 / 0.95), transparent 55%),
+      radial-gradient(circle at 70% 75%, oklch(0.1 0.008 280 / 0.95), transparent 60%),
+      linear-gradient(145deg, oklch(0.26 0.012 280), oklch(0.12 0.01 280));
+  }
+
   @keyframes piece-place {
     0% { transform: scale(0.6); opacity: 0; }
     60% { transform: scale(1.08); opacity: 1; }
