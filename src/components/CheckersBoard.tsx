@@ -73,9 +73,12 @@ export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
   const [difficulty, setDifficulty] = useState<Difficulty>("cyber");
   const [aiThinking, setAiThinking] = useState(false);
 
-  // Blitz clocks (chess-style). Each player has 3:00 total.
-  const [timeP1, setTimeP1] = useState(INITIAL_TIME_MS);
-  const [timeP2, setTimeP2] = useState(INITIAL_TIME_MS);
+  // Time control: Zen (no clock), Blitz (3 min), Rapid (10 min).
+  const [timeControl, setTimeControl] = useState<TimeControl>("blitz");
+  const timed = timeControl !== "zen";
+  const initialClockMs = TIME_CONTROL_MS[timeControl];
+  const [timeP1, setTimeP1] = useState<number>(initialClockMs);
+  const [timeP2, setTimeP2] = useState<number>(initialClockMs);
   const [timeoutLoss, setTimeoutLoss] = useState<Player | null>(null);
 
   // Match telemetry for the AI Coach.
