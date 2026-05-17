@@ -212,6 +212,8 @@ function Index() {
     setOutcome(null);
     setMatchEvents(emptyEvents());
     setGameKey((k) => k + 1);
+    setHintsUsed(0);
+    setHintSuggestion(null);
   }, []);
 
   const handleOpponentJoined = useCallback(() => {
