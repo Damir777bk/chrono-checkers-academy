@@ -193,8 +193,8 @@ export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
     setMoveCount(0);
     setWinner(null);
     setAiThinking(false);
-    setTimeP1(INITIAL_TIME_MS);
-    setTimeP2(INITIAL_TIME_MS);
+    setTimeP1(initialClockMs);
+    setTimeP2(initialClockMs);
     setTimeoutLoss(null);
     eventsRef.current = emptyEvents();
     prevP1KingsRef.current = 0;
