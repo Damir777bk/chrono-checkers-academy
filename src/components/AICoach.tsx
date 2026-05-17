@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { emptyEvents, type MatchEvents } from "@/lib/checkers";
 
 interface Props {
   enabled: boolean;
@@ -9,39 +10,84 @@ interface Props {
   outcome: "win" | "loss" | "draw" | null;
   /** Bump this value to reset the coach panel for a new game. */
   resetKey: number;
+  /** Telemetry collected during the match. */
+  events?: MatchEvents;
 }
-
-const WIN_FEEDBACK = [
-  "Tactical analysis: You dominated the center grid, locking down crucial diagonals by move 9. Your tempo control was textbook Karpov.",
-  "Engine review: Your sacrifice on move 14 unraveled their pawn chain — a grandmaster-tier exchange. The endgame conversion was clean.",
-  "Pattern recognition: Multi-jump combination on the c-file converted material advantage into a king on the long diagonal. Decisive play.",
-  "Strategic verdict: Patient zugzwang. You forced your opponent into a losing trade structure by move 18 and never released pressure.",
-];
-
-const LOSS_FEEDBACK = [
-  "Tactical analysis: You held the center early, but exposed your rear flank around move 12. Focus on securing edge nodes before pushing forward.",
-  "Engine review: A premature king-side advance left your back rank vulnerable. Reinforce defensive pawns before initiating exchanges.",
-  "Pattern recognition: You missed a forced double-jump opportunity on move 9. Train tactical vision drills — the position was winning.",
-  "Strategic verdict: Material was even, but your kings entered the endgame on the wrong diagonal. Study king-and-pawn endings, file E.",
-];
-
-const DRAW_FEEDBACK = [
-  "Tactical analysis: A balanced, defensive masterclass. Both sides held tempo flawlessly — true grandmaster equilibrium.",
-  "Engine review: Symmetrical pawn structures led to a quiet positional draw. Consider sharper openings next session.",
-];
 
 const SCAN_LINES = [
   "Initializing neural lattice…",
   "Indexing 4,200,000 master games…",
-  "Cross-referencing opening tree…",
-  "Computing tempo deltas…",
-  "Evaluating king safety vectors…",
+  "Replaying move tree…",
+  "Auditing capture sequences…",
+  "Evaluating clock pressure curve…",
   "Compiling tactical verdict…",
 ];
 
-export function AICoach({ enabled, moveNumber, turn, outcome, resetKey }: Props) {
+type Insight = { label: string; text: string };
+
+/** Produce a context-aware breakdown from logged match events. */
+function buildAnalysis(outcome: "win" | "loss" | "draw" | null, ev: MatchEvents): Insight[] {
+  const insights: Insight[] = [];
+
+  if (ev.missedCaptures > 0) {
+    insights.push({
+      label: "Tactical Error",
+      text:
+        ev.missedCaptures === 1
+          ? "On one turn you reached for a quiet piece while a mandatory capture was on the board. The engine forced your hand — costing you tempo."
+          : `On ${ev.missedCaptures} separate turns you ignored mandatory captures, allowing the opponent to dictate the pace of the exchange.`,
+    });
+  }
+
+  if (ev.kingLossesP1 > 0) {
+    insights.push({
+      label: "Crown Lost",
+      text: `Your opponent captured ${ev.kingLossesP1 === 1 ? "your king" : `${ev.kingLossesP1} of your kings`}. Promote pieces only when their escape squares are defended — an exposed king is worth more than two soldiers.`,
+    });
+  }
+
+  if (ev.blitzPressureP1) {
+    insights.push({
+      label: "Time Management",
+      text:
+        outcome === "win"
+          ? "You played well but flirted with the flag — your clock dipped under 30 seconds. Build a faster opening repertoire so the mid-game has air to breathe."
+          : "You crumbled under blitz pressure. Try to move faster in the opening so the mid-game has air to breathe.",
+    });
+  }
+
+  if (ev.earlyDefeat) {
+    insights.push({
+      label: "Opening Flaw",
+      text: `Your defence collapsed in only ${ev.totalMoves} moves. Focus on securing your back row in the first five moves and avoid early advances on a single flank.`,
+    });
+  }
+
+  if (insights.length === 0) {
+    if (outcome === "win") {
+      insights.push({
+        label: "Strategic Verdict",
+        text: `A clean ${ev.totalMoves}-move performance — no missed captures, no king losses, no time trouble. Textbook tempo control. Karpov would nod.`,
+      });
+    } else if (outcome === "draw") {
+      insights.push({
+        label: "Strategic Verdict",
+        text: "A balanced positional duel. Both sides held tempo and material flawlessly — true grandmaster equilibrium.",
+      });
+    } else {
+      insights.push({
+        label: "Strategic Verdict",
+        text: "Material was even and the clock was healthy, but your endgame conversion slipped. Study king-and-pawn endings — file E.",
+      });
+    }
+  }
+
+  return insights;
+}
+
+export function AICoach({ enabled, moveNumber, turn, outcome, resetKey, events }: Props) {
   const [phase, setPhase] = useState<"idle" | "scanning" | "done">("idle");
-  const [review, setReview] = useState<string | null>(null);
+  const [review, setReview] = useState<Insight[] | null>(null);
   const [scanIdx, setScanIdx] = useState(0);
 
   // Reset when a new game begins.
@@ -63,10 +109,9 @@ export function AICoach({ enabled, moveNumber, turn, outcome, resetKey }: Props)
     setPhase("scanning");
     setReview(null);
     setScanIdx(0);
+    const snapshot = events ?? emptyEvents();
     setTimeout(() => {
-      const pool =
-        outcome === "win" ? WIN_FEEDBACK : outcome === "draw" ? DRAW_FEEDBACK : LOSS_FEEDBACK;
-      setReview(pool[Math.floor(Math.random() * pool.length)]);
+      setReview(buildAnalysis(outcome, snapshot));
       setPhase("done");
     }, 3000);
   };
