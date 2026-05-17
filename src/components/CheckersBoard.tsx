@@ -67,6 +67,10 @@ export function CheckersBoard({ onGameEnd, onTurnChange, onNewGame }: Props) {
   const [timeP2, setTimeP2] = useState(INITIAL_TIME_MS);
   const [timeoutLoss, setTimeoutLoss] = useState<Player | null>(null);
 
+  // Match telemetry for the AI Coach.
+  const eventsRef = useRef<MatchEvents>(emptyEvents());
+  const prevP1KingsRef = useRef<number>(0);
+
   const legalForSelected = useMemo<Move[]>(
     () => (selected ? getMovesFrom(board, turn, selected) : []),
     [board, turn, selected]
