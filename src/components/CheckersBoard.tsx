@@ -6,6 +6,7 @@ import {
   getMovesFrom,
   initialBoard,
   pickAIMove,
+  pickBestMoveFor,
   type Board,
   type Difficulty,
   type MatchEvents,
@@ -27,6 +28,10 @@ interface Props {
   ) => void;
   onTurnChange?: (player: Player, moveNum: number) => void;
   onNewGame?: () => void;
+  /** Increment to request a fresh coach hint for the side currently to move. */
+  hintToken?: number;
+  /** Fires when a hint is computed (or cleared with null). */
+  onHintComputed?: (move: Move | null) => void;
 }
 
 const DIFFICULTY_LABEL: Record<Difficulty, string> = {
