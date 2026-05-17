@@ -10,10 +10,13 @@ import { InviteModal } from "@/components/InviteModal";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { ThemeSelector } from "@/components/ThemeSelector";
 import { Toaster } from "@/components/ui/sonner";
-import { emptyEvents, type MatchEvents, type Player } from "@/lib/checkers";
+import { emptyEvents, type MatchEvents, type Move, type Player } from "@/lib/checkers";
 import { THEMES, type ThemeId } from "@/lib/themes";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
+
+const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
+const squareName = (r: number, c: number) => `${FILES[c]}${8 - r}`;
 
 export const Route = createFileRoute("/")({
   component: Index,
