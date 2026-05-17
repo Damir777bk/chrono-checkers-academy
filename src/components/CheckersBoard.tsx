@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   applyMove,
+  emptyEvents,
   getAllMoves,
   getMovesFrom,
   initialBoard,
   pickAIMove,
   type Board,
   type Difficulty,
+  type MatchEvents,
   type Move,
   type Player,
   type Pos,
@@ -18,7 +20,11 @@ const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 type Mode = "local" | "ai";
 
 interface Props {
-  onGameEnd?: (winner: Player | "draw", meta: { mode: "local" | "ai"; difficulty?: string }) => void;
+  onGameEnd?: (
+    winner: Player | "draw",
+    meta: { mode: "local" | "ai"; difficulty?: string },
+    events: MatchEvents,
+  ) => void;
   onTurnChange?: (player: Player, moveNum: number) => void;
   onNewGame?: () => void;
 }
