@@ -8,8 +8,10 @@ import { CheckersBoard } from "@/components/CheckersBoard";
 import { OnlineCheckersBoard } from "@/components/OnlineCheckersBoard";
 import { InviteModal } from "@/components/InviteModal";
 import { UpgradeModal } from "@/components/UpgradeModal";
+import { ThemeSelector } from "@/components/ThemeSelector";
 import { Toaster } from "@/components/ui/sonner";
 import { emptyEvents, type MatchEvents, type Player } from "@/lib/checkers";
+import { THEMES, type ThemeId } from "@/lib/themes";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 
