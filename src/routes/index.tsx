@@ -295,6 +295,8 @@ function Index() {
                   onGameEnd={handleEnd}
                   onTurnChange={handleTurn}
                   onNewGame={handleNewGame}
+                  hintToken={hintToken}
+                  onHintComputed={handleHintComputed}
                 />
               )}
             </div>
@@ -307,6 +309,12 @@ function Index() {
             outcome={outcome}
             resetKey={gameKey}
             events={matchEvents}
+            isPremium={isPremium}
+            hintsUsed={hintsUsed}
+            maxHints={MAX_FREE_HINTS}
+            canRequestHint={!gameOver && !room && turn === "p1"}
+            hintSuggestion={hintSuggestion}
+            onRequestHint={room ? undefined : handleRequestHint}
           />
         </div>
 
