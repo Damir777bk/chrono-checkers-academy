@@ -226,6 +226,8 @@ export function CheckersBoard({
     setMoveCount(0);
     setWinner(null);
     setAiThinking(false);
+    setHint(null);
+    onHintComputed?.(null);
     setTimeP1(initialClockMs);
     setTimeP2(initialClockMs);
     setTimeoutLoss(null);
