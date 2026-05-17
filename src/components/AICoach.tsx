@@ -185,11 +185,15 @@ export function AICoach({ enabled, moveNumber, turn, outcome, resetKey, events }
           )}
 
           {review && (
-            <div className="border-l-2 border-[var(--gold)] pl-4 py-1 animate-piece-place">
-              <div className="text-[10px] uppercase tracking-widest text-[var(--gold)] mb-1">
-                Grandmaster Insight
-              </div>
-              <p className="text-sm leading-relaxed text-foreground">{review}</p>
+            <div className="space-y-3 animate-piece-place">
+              {review.map((ins, i) => (
+                <div key={i} className="border-l-2 border-[var(--gold)] pl-4 py-1">
+                  <div className="text-[10px] uppercase tracking-widest text-[var(--gold)] mb-1">
+                    {ins.label}
+                  </div>
+                  <p className="text-sm leading-relaxed text-foreground">{ins.text}</p>
+                </div>
+              ))}
             </div>
           )}
         </div>
