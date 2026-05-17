@@ -147,6 +147,7 @@ function Index() {
   const handleNewGame = useCallback(() => {
     setGameOver(false);
     setOutcome(null);
+    setMatchEvents(emptyEvents());
     setGameKey((k) => k + 1);
   }, []);
 
